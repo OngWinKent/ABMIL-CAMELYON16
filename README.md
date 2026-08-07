@@ -49,7 +49,7 @@ python -m pip install torchmil huggingface_hub numpy matplotlib tqdm
 
 or
 
-```python
+```bash
 pip install -r requirements.txt
 ```
 
@@ -168,11 +168,13 @@ After softmax normalization over all patches in a slide, the weights sum to one.
 
 ## 3. Inference output and attention maps
 
-[`inference.py`](inference.py) does the following in order:
+[`inference.py`](inference.py) performs the following steps:
 
-1. Runs inference on the test split the trained model **./weights/model.pt**.
-2. Prints per-slide predictions and overall bag classification accuracy.
-3. Displays an attention map for each test slide.
+1. Initializes the selected ABMIL architecture and loads the saved checkpoint from `./weights/model.pt` by default.
+2. Switches the model to evaluation mode and runs it on every slide in the test split.
+3. Reports each slide’s ground-truth label, predicted label, binary-cross-entropy loss, and classification error.
+4. Computes and prints the overall slide-level classification accuracy.
+5. When `show_plot=True`, displays a ground-truth patch-annotation map alongside the model’s attention-weight map for each test slide.
 
 Run inference on the standard attention model:
 
@@ -228,7 +230,7 @@ utils.run_inference(model=model, test_loader=test_loader, is_cuda=is_cuda, show_
 
 ```text
 train.py        Command-line entry point: train abmil model
-test.py         Run inference based on trained model
+inference.py    Run inference based on trained model
 utils.py        Device setup, loaders, training loop, inference, visualization.
 dataloader.py   Download/extract/inspect CAMELYON16 and define Camelyon16Bags.
 model.py        Attention and gated-attention ABMIL models.
