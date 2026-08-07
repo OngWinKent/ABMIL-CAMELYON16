@@ -1,0 +1,40 @@
+from __future__ import print_function
+import argparse
+import utils
+
+# Training settings
+parser = argparse.ArgumentParser(description='PyTorch MNIST bags Example')
+parser.add_argument('--root', type=str, default= "./datasets",
+                    help='dataset root directory')
+parser.add_argument('--lr', type=float, default=0.0005,
+                    help='learning rate (default: 0.0005)')
+parser.add_argument('--in_features', type=int, default=1024, 
+                    help='Attenton model input feature size')
+parser.add_argument('--patch_emb_size', type=int, default=500, 
+                    help='Patch embedding size')
+parser.add_argument('--attn_hid_size', type=int, default=128, 
+                    help='Attention hidden size')
+parser.add_argument('--seed', type=int, default=1,
+                    help='random seed (default: 1)')
+parser.add_argument('--model_name', type=str, default='attention', help='Attention model selection', 
+                    choices= ["attention", "gated_attention"])
+parser.add_argument('--weights_path', type=str, default='./weights/model.pt', help='Model saving path')
+args = parser.parse_args()
+
+
+if __name__ == "__main__":
+    # Init device running on cpu or cuda
+    is_cuda = utils.init_device(seed= args.seed)
+
+    # Load dataset as loader
+    train_loader, test_loader = utils.load_dataset(root= args.root)
+
+    # Attention model initialization
+    model = utils.init_model(model_name= args.model_name, 
+                            in_features= args.in_features,
+                            patch_emb_size= args.patch_emb_size,
+                            attn_hid_size= args.attn_hid_size)
+    
+    # Running inference on test dataset
+    utils.run_inference(model= model, test_loader= test_loader, is_cuda= is_cuda, show_plot= True, weights_path= args.weights_path)
+    
