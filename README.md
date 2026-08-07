@@ -155,17 +155,17 @@ label: [slide_label, instance_labels, coordinates]
 
 The model removes the leading batch dimension, projects every 1024-D patch feature to an `M=500`-D embedding, calculates a normalized attention weight for each patch, and forms one slide embedding through a weighted sum. A sigmoid classifier produces `Y_prob`, the probability that the slide is tumor-positive. The loss is binary cross-entropy computed from the slide label only.
 
-For ordinary attention, the score for patch embedding \(h_i\) is:
+For ordinary attention, the score for patch embedding $h_i$ is:
 
-\[
+$$
 a_i = w^T\tanh(Vh_i)
-\]
+$$
 
 For gated attention, it is:
 
-\[
+$$
 a_i = w^T\left(\tanh(Vh_i) \odot \sigma(Uh_i)\right)
-\]
+$$
 
 After softmax normalization over all patches in a slide, the weights sum to one. Higher attention means the patch had greater influence on that slide's prediction; it should not be interpreted as a calibrated per-patch tumor probability.
 
