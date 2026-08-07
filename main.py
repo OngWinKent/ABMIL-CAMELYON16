@@ -26,7 +26,7 @@ args = parser.parse_args()
 
 
 if __name__ == "__main__":
-    # Init device
+    # Init device running on cpu or cuda
     is_cuda = utils.init_device(seed= args.seed)
 
     # Load dataset as loader
