@@ -204,7 +204,7 @@ to:
 utils.inference(model=model, test_loader=test_loader, is_cuda=is_cuda, show_plot=False)
 ```
 
-## Important current limitations
+## Notes
 - The displayed patch labels are for evaluation and visualization. They are not used as instance-level supervision during training.
 - Results depend on hardware, PyTorch/torchmil versions, random initialization, and hyperparameters. 
 - This repository is a research reproduction, not a clinical diagnostic system.
