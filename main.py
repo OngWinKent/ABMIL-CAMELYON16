@@ -22,6 +22,7 @@ parser.add_argument('--seed', type=int, default=1,
                     help='random seed (default: 1)')
 parser.add_argument('--model_name', type=str, default='attention', help='Attention model selection', 
                     choices= ["attention", "gated_attention"])
+parser.add_argument('--weights_path', type=str, default='./weights/model.pt', help='Model saving path')
 args = parser.parse_args()
 
 
@@ -40,8 +41,8 @@ if __name__ == "__main__":
 
     # Model training on train dataset
     train_params = {'epoch_num': args.epoch_num, 'lr': args.lr, 'weight_decay': args.weight_decay}
-    utils.train(model= model, train_loader= train_loader, is_cuda= is_cuda, train_params= train_params)
+    utils.train(model= model, train_loader= train_loader, test_loader= test_loader, is_cuda= is_cuda, train_params= train_params, weights_path= args.weights_path)
 
     # Running inference on test dataset
-    utils.inference(model= model, test_loader= test_loader, is_cuda= is_cuda, show_plot= True)
+    utils.inference(model= model, test_loader= test_loader, is_cuda= is_cuda, show_plot= True, weights_path= args.weights_path)
     

@@ -9,6 +9,7 @@ from tqdm import tqdm
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 """Retrieve attention model for training and inference"""
 def init_model(model_name: str, in_features: int= 1024, patch_emb_size: int= 500, attn_hid_size: int= 128) -> nn.Module:
@@ -54,8 +55,10 @@ def load_dataset(root: str) -> Tuple[torch.utils.data.DataLoader,torch.utils.dat
     return train_loader, test_loader
 
 """Model training"""
-def train(model: nn.Module, train_loader: torch.utils.data.DataLoader, is_cuda: bool, train_params: dict):
+def train(model: nn.Module, train_loader: torch.utils.data.DataLoader, test_loader: torch.utils.data.DataLoader, is_cuda: bool, train_params: dict, weights_path: str):
     print(f"[Training] Start model training")
+    # Create weights saving parent folder
+    os.makedirs(os.path.dirname(weights_path), exist_ok=True)
 
     # Get model training parameters
     epoch_num = train_params.get('epoch_num')
@@ -66,6 +69,7 @@ def train(model: nn.Module, train_loader: torch.utils.data.DataLoader, is_cuda: 
     optimizer = optim.Adam(model.parameters(), lr= lr, betas=(0.9, 0.999), weight_decay=weight_decay)
 
     # Main training loop
+    best_test_loss = 1
     for epoch in tqdm(range(1, epoch_num+1), desc= 'Model training'):
         model.train()
         train_loss = 0.
@@ -89,15 +93,66 @@ def train(model: nn.Module, train_loader: torch.utils.data.DataLoader, is_cuda: 
             # step
             optimizer.step()
 
-        # calculate loss and error for epoch
-        train_loss /= len(train_loader)
-        train_error /= len(train_loader)
+        # Calculate train loss and error for epoch
+        avg_train_loss = train_loss / len(train_loader)
+        avg_train_loss = round(avg_train_loss.cpu().numpy()[0], 4)
+        avg_train_error = round(train_error/ len(train_loader), 4)
 
-        tqdm.write(f'Epoch: {epoch}, Loss: {train_loss.cpu().numpy()[0]:.4f}, Train error: {train_error:.4f}')
+        # Compute test loss and error
+        avg_test_loss, avg_test_error, avg_class_acc = test(model= model, test_loader= test_loader, is_cuda= is_cuda)
+
+        # Save trained model with lowest test loss
+        if avg_test_loss <= best_test_loss:
+            print(f"best model saved at epoch: {epoch}, current test loss: {avg_test_loss} best test loss: {best_test_loss}")
+            best_test_loss = avg_test_loss
+            torch.save(model.state_dict(), weights_path)
+
+        # Show training details 
+        tqdm.write(f'Epoch: {epoch}, [Loss] Train|Test: {avg_train_loss:.4f}|{avg_test_loss}, [Error] Train|Test: {avg_train_error}|{avg_test_error}')
     print(f"[Training] Model finished training")
 
+"""Test on test loader"""
+def test(model: nn.Module, test_loader: torch.utils.data.DataLoader, is_cuda: bool) -> Tuple[float, float, float]:
+    model.eval()
+    test_loss = 0.0
+    test_error = 0.0
+    bag_correct_num = 0
+    total_num = 0
+    with torch.no_grad():
+        for data, label in test_loader:
+            bag_label = label[0]
+
+            if is_cuda:
+                data, bag_label = data.cuda(), bag_label.cuda()
+
+            # Forward Pass
+            Y_prob, predicted_label, _ = model(data)
+            loss, attention_weights = model.calculate_objective(data, bag_label)
+            error, _ = model.calculate_classification_error(data, bag_label)
+            # Compute loss
+            test_loss += loss.item()
+            test_error += error
+            # Compute bag classification
+            bag_gt = bag_label.cpu().numpy()[0]
+            bag_pre = int(predicted_label.cpu().numpy()[0][0])
+            if bag_gt == bag_pre:
+                bag_correct_num += 1
+            total_num += 1
+
+    # Average 
+    avg_test_loss = round(test_loss / total_num, 4)
+    avg_test_error = round(test_error / total_num)
+    avg_class_acc = round(bag_correct_num / total_num, 4)
+
+    return avg_test_loss, avg_test_error, avg_class_acc
+
 """Running inference"""
-def inference(model: nn.Module, test_loader: torch.utils.data.DataLoader, is_cuda: bool, show_plot: bool):
+def inference(model: nn.Module, test_loader: torch.utils.data.DataLoader, is_cuda: bool, show_plot: bool, weights_path: str):
+    # Check input weights path existence
+    if not os.path.exists(weights_path):
+        raise Exception(f"Input weights path {weights_path} not found for inference")
+    # Load model for inference
+    model.load_state_dict(torch.load(weights_path))
     model.eval()
     test_loss = 0.0
     test_error = 0.0
