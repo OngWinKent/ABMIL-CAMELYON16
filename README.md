@@ -206,7 +206,8 @@ utils.inference(model=model, test_loader=test_loader, is_cuda=is_cuda, show_plot
 
 ## Important current limitations
 - The displayed patch labels are for evaluation and visualization. They are not used as instance-level supervision during training.
-- Results depend on hardware, PyTorch/torchmil versions, random initialization, and hyperparameters. This repository is a research reproduction, not a clinical diagnostic system.
+- Results depend on hardware, PyTorch/torchmil versions, random initialization, and hyperparameters. 
+- This repository is a research reproduction, not a clinical diagnostic system.
 
 ## Repository layout
 
