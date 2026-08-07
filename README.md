@@ -1,4 +1,4 @@
-# Attention-based Deep Multiple Instance Learning for CAMELYON16
+# Attention-based Deep Multiple Instance Learning for CAMELYON16 Dataset
 
 This repository adapts **Attention-based Deep Multiple Instance Learning (ABMIL)** to the CAMELYON16 histopathology dataset. It treats each whole-slide image (WSI) as a *bag* of patch-level feature vectors and predicts whether that slide contains metastatic tissue.
 
@@ -230,6 +230,4 @@ If you use this adaptation, please also cite the original ABMIL paper above and 
 
 ## License and Copyright
 
-The project is open source under BSD-3 license (see the `LICENSE` file)."# ABMIL-CAMELYON16" 
-"# ABMIL-CAMELYON16" 
-"# ABMIL-CAMELYON16" 
+The project is open source under BSD-3 license (see the `LICENSE` file).
