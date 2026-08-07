@@ -100,28 +100,25 @@ At the end of `python dataloader.py`, the script builds train and test `DataLoad
 
 For more information on the processed data and the `CAMELYON16MILDataset` API, see the [torchmil CAMELYON16 documentation](https://torchmil.readthedocs.io/en/main/examples/wsi_classification/).
 
-## 2. Train and run inference
+## 2. Train ABMIL model
 
-[`main.py`](main.py) is the entry point. It does the following in order:
+[`train.py`](train.py) is the entry point of main training script. It does the following in order:
 
 1. Selects GPU when CUDA is available, otherwise CPU.
 2. Creates `train_loader` and `test_loader` via `utils.load_dataset()`.
 3. Instantiates the selected ABMIL model.
 4. Trains for the requested number of epochs with Adam.
-5. Runs inference on the test split using the **same in-memory model**.
-6. Prints per-slide predictions and overall bag classification accuracy.
-7. Displays an attention map for each test slide.
 
 Run the standard attention model:
 
 ```bash
-python main.py --root ./datasets --model_name attention --epoch_num 10
+python train.py --root ./datasets --model_name attention --epoch_num 10
 ```
 
 Run the gated-attention model:
 
 ```bash
-python main.py --root ./datasets --model_name gated_attention --epoch_num 10
+python train.py --root ./datasets --model_name gated_attention --epoch_num 10
 ```
 
 Useful arguments:
@@ -141,7 +138,7 @@ Useful arguments:
 For example, a 20-epoch gated-attention experiment is:
 
 ```bash
-python main.py --root ./datasets --model_name gated_attention --epoch_num 20 --lr 0.0005
+python train.py --root ./datasets --model_name gated_attention --epoch_num 20 --lr 0.0005 --weights_path ./weights/model.pt
 ```
 
 ## What happens during training?
@@ -169,7 +166,25 @@ $$
 
 After softmax normalization over all patches in a slide, the weights sum to one. Higher attention means the patch had greater influence on that slide's prediction; it should not be interpreted as a calibrated per-patch tumor probability.
 
-## Inference output and attention maps
+## 3. Inference output and attention maps
+
+[`inference.py`](inference.py) does the following in order:
+
+1. Runs inference on the test split the trained model **./weights/model.pt**.
+2. Prints per-slide predictions and overall bag classification accuracy.
+3. Displays an attention map for each test slide.
+
+Run inference on the standard attention model:
+
+```bash
+python inference.py --root ./datasets --model_name attention --weights_path ./weights/model.pt
+```
+
+Run inference the gated-attention model:
+
+```bash
+python inference.py --root ./datasets --model_name gated_attention --weights_path ./weights/model.pt
+```
 
 During inference, [`utils.py`](utils.py) prints lines similar to:
 
@@ -182,7 +197,7 @@ Bag GT: 1 Bag Pre: 1 Loss: 0.2134 Test Error: 0.0000
 - `Loss`: binary cross-entropy for that slide.
 - `Test Error`: `0.0` for a correct prediction and `1.0` for an incorrect one.
 
-When `show_plot=True` in `main.py`, inference shows two panels:
+When `show_plot=True` in `inference.py`, inference shows two panels:
 
 1. Ground-truth patch annotations using `patch_labels` and `coords`.
 2. Predicted attention map: the same patch coordinates coloured by their normalized attention weights.
@@ -192,16 +207,16 @@ When `show_plot=True` in `main.py`, inference shows two panels:
 </p>
 <p align="center">Figure 2: Representative histopathology patch containing tumor cells used as an inference sample. .</p>
 
-For a non-interactive run, change this line in [`main.py`](main.py):
+For a non-interactive run, change this line in [`inference.py`](inference.py):
 
 ```python
-utils.inference(model=model, test_loader=test_loader, is_cuda=is_cuda, show_plot=True)
+utils.run_inference(model=model, test_loader=test_loader, is_cuda=is_cuda, show_plot=True)
 ```
 
 to:
 
 ```python
-utils.inference(model=model, test_loader=test_loader, is_cuda=is_cuda, show_plot=False)
+utils.run_inference(model=model, test_loader=test_loader, is_cuda=is_cuda, show_plot=False)
 ```
 
 ## Notes
@@ -212,7 +227,8 @@ utils.inference(model=model, test_loader=test_loader, is_cuda=is_cuda, show_plot
 ## Repository layout
 
 ```text
-main.py         Command-line entry point: train, then infer.
+train.py        Command-line entry point: train abmil model
+test.py         Run inference based on trained model
 utils.py        Device setup, loaders, training loop, inference, visualization.
 dataloader.py   Download/extract/inspect CAMELYON16 and define Camelyon16Bags.
 model.py        Attention and gated-attention ABMIL models.
