@@ -38,9 +38,10 @@ if __name__ == "__main__":
                             patch_emb_size= args.patch_emb_size,
                             attn_hid_size= args.attn_hid_size)
 
-    # Model training
+    # Model training on train dataset
     train_params = {'epoch_num': args.epoch_num, 'lr': args.lr, 'weight_decay': args.weight_decay}
     utils.train(model= model, train_loader= train_loader, is_cuda= is_cuda, train_params= train_params)
+
     # Running inference on test dataset
     utils.inference(model= model, test_loader= test_loader, is_cuda= is_cuda, show_plot= True)
     
